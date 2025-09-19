@@ -5,4 +5,5 @@ const authMiddleware=require('../middleware/authMiddleware')
 
 router.post('/send',authMiddleware,chatController.sendMessage)
 router.get("/", authMiddleware,chatController.getMessages);
+router.get("/history/:roomId",authMiddleware,chatController.getPersonalMessages)
 module.exports=router

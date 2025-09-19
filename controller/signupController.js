@@ -21,7 +21,7 @@ exports.signup=async(req,res)=>{
             password:hashedPass,
         })
 
-        const token = jwt.sign({ id: newUser.id }, process.env.JWT_KEY)
+        const token = jwt.sign({ id: newUser.id, name: user.name }, process.env.JWT_KEY)
 
         res.status(201).json({message:'SignUp successfull',newUser,token})
 
@@ -47,7 +47,7 @@ exports.login=async(req,res)=>{
             return res.status(401).json({message:'Invalid credentials'})
         }
 
-        const token = jwt.sign({ id: user.id }, process.env.JWT_KEY)
+        const token = jwt.sign({ id: user.id, name: user.name }, process.env.JWT_KEY)
 
         res.status(200).json({message:'Login Successfull',token})
 

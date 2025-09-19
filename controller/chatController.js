@@ -37,3 +37,18 @@ exports.getMessages = async (req, res) => {
     res.status(500).json({ message: "Server error while fetching messages" });
   }
 };
+
+exports.getPersonalMessages=async(req,res)=>{
+  try {
+    const { roomId } = req.params;
+    const messages = await Message.findAll({
+      where: { roomId },
+      order: [["createdAt", "ASC"]],
+    });
+
+    res.json(messages);
+  } catch (err) {
+    console.error("❌ Error fetching chat history:", err);
+    res.status(500).json({ message: "Error fetching chat history" });
+  }
+}

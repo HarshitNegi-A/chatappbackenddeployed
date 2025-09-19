@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const registerChatHandlers = require("./handler/chatSocket");
 const { socketAuthMiddleware } = require("./middleware");
+const registerPersonalChatHandlers=require('./handler/personalChat')
 
 function setupSocketIO(server) {
   const io = new Server(server, {
