@@ -9,6 +9,7 @@ const chatRoutes=require('./routes/chatRoutes')
 const sequelize=require("./db")
 const setupSocketIO = require("./socket");
 const cors=require('cors')
+const groupRoutes = require("./routes/groupRoute");
 const server = http.createServer(app);   
 setupSocketIO(server)
 app.use(cors())
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use('/',signupRoute)
 app.use('/chat',chatRoutes);
 app.use("/users", userRoutes);
+app.use("/groups", groupRoutes);
 
 
 

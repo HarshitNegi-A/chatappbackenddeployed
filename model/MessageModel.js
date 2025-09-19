@@ -14,6 +14,10 @@ const Message = sequelize.define("Message", {
     type: DataTypes.STRING,   // for personal chat
     allowNull: true,
   },
+   groupId: {
+    type: DataTypes.INTEGER, // for group chats
+    allowNull: true,
+  },
 }, {
   timestamps: true, 
 });

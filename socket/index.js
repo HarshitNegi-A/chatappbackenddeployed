@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const registerChatHandlers = require("./handler/chatSocket");
 const { socketAuthMiddleware } = require("./middleware");
 const registerPersonalChatHandlers=require('./handler/personalChat')
+const registerGroupHandlers=require('./handler/groupChat')
 
 function setupSocketIO(server) {
   const io = new Server(server, {
@@ -18,6 +19,7 @@ function setupSocketIO(server) {
 
     registerChatHandlers(io, socket);
      registerPersonalChatHandlers(io, socket); 
+     registerGroupHandlers(io,socket)
 
     socket.on("disconnect", () => {
       console.log(`❌ Client disconnected: ${socket.id}`);
