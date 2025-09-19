@@ -1,32 +1,41 @@
+// socket-io/index.js
 const { Server } = require("socket.io");
-const registerChatHandlers = require("./handler/chatSocket");
 const { socketAuthMiddleware } = require("./middleware");
-const registerPersonalChatHandlers=require('./handler/personalChat')
-const registerGroupHandlers=require('./handler/groupChat')
+const registerChatHandlers = require("./handler/chatSocket");
+const registerGroupHandlers = require("./handler/groupChat");
+const registerPersonalHandlers = require("./handler/personalChat");
+
+let ioInstance = null;
 
 function setupSocketIO(server) {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173", // ✅ no trailing slash
-      methods: ["GET", "POST"]
+      origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
+      methods: ["GET", "POST"],
     }
   });
 
   io.use(socketAuthMiddleware);
 
   io.on("connection", (socket) => {
-    console.log(`🔌 New client connected: ${socket.id}`);
+    console.log("Socket connected", socket.id, "user", socket.user?.id);
 
     registerChatHandlers(io, socket);
-     registerPersonalChatHandlers(io, socket); 
-     registerGroupHandlers(io,socket)
+    registerGroupHandlers(io, socket);
+    registerPersonalHandlers(io, socket);
 
-    socket.on("disconnect", () => {
-      console.log(`❌ Client disconnected: ${socket.id}`);
+    socket.on("disconnect", (reason) => {
+      console.log("Socket disconnected", socket.id, reason);
     });
   });
 
+  ioInstance = io;
   return io;
 }
 
-module.exports = setupSocketIO;
+function getIO() {
+  if (!ioInstance) throw new Error("Socket.io not initialized yet");
+  return ioInstance;
+}
+
+module.exports = { setupSocketIO, getIO };

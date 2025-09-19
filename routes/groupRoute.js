@@ -4,7 +4,21 @@ const GroupMember = require("../model/GroupMember");
 const Message = require("../model/MessageModel");
 const User = require("../model/UserModel");
 
+const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+
+require("dotenv").config();
+
 const router = express.Router();
+
+// 🔹 Setup S3 client
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 // ✅ Create a group
 router.post("/", async (req, res) => {
@@ -67,7 +81,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Fetch group messages with sender info
+// ✅ Fetch group messages with sender info + fresh signed URLs
 router.get("/:groupId/messages", async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -80,16 +94,33 @@ router.get("/:groupId/messages", async (req, res) => {
       },
     });
 
-    const formatted = messages.map((m) => ({
-      id: m.id,
-      message: m.message,
-      user: {
-        id: m.User?.id,
-        name: m.User?.name,
-      },
-      groupId: m.groupId,
-      createdAt: m.createdAt,
-    }));
+    const formatted = await Promise.all(
+      messages.map(async (m) => {
+        let signedUrl = null;
+
+        // If this is a media message, regenerate presigned URL
+        if (m.mediaUrl) {
+          const command = new GetObjectCommand({
+            Bucket: process.env.AWS_BUCKET,
+            Key: m.mediaUrl, // we stored the S3 key in DB
+          });
+          signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        }
+
+        return {
+          id: m.id,
+          message: m.message,
+          user: {
+            id: m.User?.id,
+            name: m.User?.name,
+          },
+          groupId: m.groupId,
+          mediaUrl: signedUrl, // ✅ fresh URL if media
+          mimeType: m.mimeType,
+          createdAt: m.createdAt,
+        };
+      })
+    );
 
     res.json(formatted);
   } catch (err) {

@@ -8,8 +8,10 @@ const Message = sequelize.define("Message", {
   },
   message: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
+   mediaUrl: { type: DataTypes.STRING, allowNull: true },
+  mimeType: { type: DataTypes.STRING, allowNull: true },
    roomId: {
     type: DataTypes.STRING,   // for personal chat
     allowNull: true,
