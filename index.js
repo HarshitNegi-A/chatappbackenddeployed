@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const app = express();
 const http = require("http");
@@ -38,7 +39,13 @@ sequelize
   .sync({ alter: true })
   .then(() => {
     console.log("Database connected successfully!");
-    server.listen(3000, () => console.log("Server is running on port 3000"));
+
+    // ✅ Start cron job AFTER DB is ready
+    require("./cron/archiveMessages");
+
+    server.listen(3000, () =>
+      console.log("Server is running on port 3000")
+    );
   })
   .catch((err) => {
     console.error("Unable to connect to the database:", err);
