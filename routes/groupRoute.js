@@ -4,29 +4,20 @@ const GroupMember = require("../model/GroupMember");
 const Message = require("../model/MessageModel");
 const User = require("../model/UserModel");
 
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
-const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-
+const path = require("path");
 require("dotenv").config();
 
 const router = express.Router();
 
-// 🔹 Setup S3 client
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-// ✅ Create a group
+// ✅ Create a new group
 router.post("/", async (req, res) => {
   try {
     const { name, userId } = req.body;
 
     if (!name || !userId) {
-      return res.status(400).json({ message: "Group name and userId are required" });
+      return res
+        .status(400)
+        .json({ message: "Group name and userId are required" });
     }
 
     const group = await Group.create({ name });
@@ -37,7 +28,7 @@ router.post("/", async (req, res) => {
       role: "admin",
     });
 
-    res.json({ message: "✅ Group created", group });
+    res.json({ message: "✅ Group created successfully", group });
   } catch (err) {
     console.error("Error creating group:", err);
     res.status(500).json({ message: "Error creating group" });
@@ -62,7 +53,12 @@ router.post("/:groupId/join", async (req, res) => {
       return res.status(400).json({ message: "Already in group" });
     }
 
-    await GroupMember.create({ GroupId: groupId, UserId: userId, role: "member" });
+    await GroupMember.create({
+      GroupId: groupId,
+      UserId: userId,
+      role: "member",
+    });
+
     res.json({ message: "✅ Joined group successfully" });
   } catch (err) {
     console.error("Error joining group:", err);
@@ -81,46 +77,43 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Fetch group messages with sender info + fresh signed URLs
+// ✅ Fetch all messages in a group (with sender info + proper local media URLs)
 router.get("/:groupId/messages", async (req, res) => {
   try {
     const { groupId } = req.params;
+
     const messages = await Message.findAll({
       where: { groupId },
       order: [["createdAt", "ASC"]],
       include: {
         model: User,
-        attributes: ["id", "name"], // 👈 include sender name
+        attributes: ["id", "name"], // Include sender info
       },
     });
 
-    const formatted = await Promise.all(
-      messages.map(async (m) => {
-        let signedUrl = null;
+    // ✅ Format messages
+    const formatted = messages.map((m) => {
+      let fullMediaUrl = null;
 
-        // If this is a media message, regenerate presigned URL
-        if (m.mediaUrl) {
-          const command = new GetObjectCommand({
-            Bucket: process.env.AWS_BUCKET,
-            Key: m.mediaUrl, // we stored the S3 key in DB
-          });
-          signedUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        }
+      // If there’s a media file, build the full URL
+      if (m.mediaUrl) {
+        // Convert stored path like "/uploads/file.jpg" to full URL
+        fullMediaUrl = `${req.protocol}://${req.get("host")}${m.mediaUrl}`;
+      }
 
-        return {
-          id: m.id,
-          message: m.message,
-          user: {
-            id: m.User?.id,
-            name: m.User?.name,
-          },
-          groupId: m.groupId,
-          mediaUrl: signedUrl, // ✅ fresh URL if media
-          mimeType: m.mimeType,
-          createdAt: m.createdAt,
-        };
-      })
-    );
+      return {
+        id: m.id,
+        message: m.message,
+        user: {
+          id: m.User?.id,
+          name: m.User?.name,
+        },
+        groupId: m.groupId,
+        mediaUrl: fullMediaUrl,
+        mimeType: m.mimeType,
+        createdAt: m.createdAt,
+      };
+    });
 
     res.json(formatted);
   } catch (err) {
