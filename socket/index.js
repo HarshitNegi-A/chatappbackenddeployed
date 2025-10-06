@@ -1,8 +1,8 @@
 const { Server } = require("socket.io");
 const { socketAuthMiddleware } = require("./middleware");
-const registerChatHandlers = require("./handlers/chat");        // ✅ fixed path naming
-const registerGroupHandlers = require("./handlers/groupChat");  // ✅ consistent plural
-const registerPersonalHandlers = require("./handlers/personalChat");
+const registerChatHandlers = require("./handler/chat");        // ✅ fixed path naming
+const registerGroupHandlers = require("./handler/groupChat");  // ✅ consistent plural
+const registerPersonalHandlers = require("./handler/personalChat");
 
 let ioInstance = null;
 
