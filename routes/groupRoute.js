@@ -3,8 +3,6 @@ const Group = require("../model/GroupModel");
 const GroupMember = require("../model/GroupMember");
 const Message = require("../model/MessageModel");
 const User = require("../model/UserModel");
-
-const path = require("path");
 require("dotenv").config();
 
 const router = express.Router();
@@ -77,27 +75,26 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ Fetch all messages in a group (with sender info + proper local media URLs)
+// ✅ Fetch all messages in a group (filter by chatType: 'group')
 router.get("/:groupId/messages", async (req, res) => {
   try {
     const { groupId } = req.params;
 
     const messages = await Message.findAll({
-      where: { groupId },
+      where: { groupId, chatType: "group" }, // ✅ only group messages
       order: [["createdAt", "ASC"]],
       include: {
         model: User,
-        attributes: ["id", "name"], // Include sender info
+        attributes: ["id", "name"], // include sender info
       },
     });
 
-    // ✅ Format messages
+    // ✅ Format messages properly
     const formatted = messages.map((m) => {
       let fullMediaUrl = null;
 
-      // If there’s a media file, build the full URL
+      // ✅ If there’s a media file, build a full URL (for Multer uploads)
       if (m.mediaUrl) {
-        // Convert stored path like "/uploads/file.jpg" to full URL
         fullMediaUrl = `${req.protocol}://${req.get("host")}${m.mediaUrl}`;
       }
 
@@ -111,6 +108,7 @@ router.get("/:groupId/messages", async (req, res) => {
         groupId: m.groupId,
         mediaUrl: fullMediaUrl,
         mimeType: m.mimeType,
+        chatType: m.chatType, // keep track
         createdAt: m.createdAt,
       };
     });

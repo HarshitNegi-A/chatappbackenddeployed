@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../db"); 
+
 const Message = sequelize.define("Message", {
   id: {
     type: DataTypes.INTEGER,
@@ -10,18 +11,29 @@ const Message = sequelize.define("Message", {
     type: DataTypes.STRING,
     allowNull: true,
   },
-   mediaUrl: { type: DataTypes.STRING, allowNull: true },
-  mimeType: { type: DataTypes.STRING, allowNull: true },
-   roomId: {
-    type: DataTypes.STRING,   // for personal chat
+  mediaUrl: {
+    type: DataTypes.STRING,
     allowNull: true,
   },
-   groupId: {
-    type: DataTypes.INTEGER, // for group chats
+  mimeType: {
+    type: DataTypes.STRING,
     allowNull: true,
+  },
+  roomId: {
+    type: DataTypes.STRING, // personal chat
+    allowNull: true,
+  },
+  groupId: {
+    type: DataTypes.INTEGER, // group chat
+    allowNull: true,
+  },
+  chatType: {
+    type: DataTypes.ENUM("global", "personal", "group"),
+    allowNull: false,
+    defaultValue: "global", // 🌍 default for backward compatibility
   },
 }, {
-  timestamps: true, 
+  timestamps: true,
 });
 
 module.exports = Message;
