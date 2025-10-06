@@ -22,7 +22,7 @@ require("dotenv").config();
 // ✅ Allowed Origins
 const allowedOrigins = [
   "http://localhost:5173",                     // local frontend
-  "https://jobtrackerfrontend-ten.vercel.app", // deployed frontend
+  "https://chatapp1101.netlify.app", // deployed frontend
 ];
 
 // ✅ Apply CORS to Express
@@ -77,7 +77,7 @@ sequelize
     require("./cron/archiveMessages");
 
     server.listen(3000, () =>
-      console.log("🚀 Server running on http://localhost:3000")
+      console.log("🚀 Server is running")
     );
   })
   .catch((err) => {
