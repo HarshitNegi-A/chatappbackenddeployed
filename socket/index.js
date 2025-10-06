@@ -11,7 +11,7 @@ function setupSocketIO(server) {
   // ✅ Define allowed origins (multi-environment)
   const allowedOrigins = [
     "http://localhost:5173",                      // local frontend (Vite)
-    "https://jobtrackerfrontend-ten.vercel.app",  // deployed frontend
+    "https://chatapp1101.netlify.app",  // deployed frontend
   ];
 
   const io = new Server(server, {
